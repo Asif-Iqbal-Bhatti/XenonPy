@@ -66,10 +66,7 @@ class RDKitFP(BaseFeaturizer):
         super().__init__(n_jobs=n_jobs, on_errors=on_errors, return_type=return_type, target_col=target_col)
         self.input_type = input_type
         self.n_bits = n_bits
-        if bit_per_entry is None:
-            self.bit_per_entry = 2
-        else:
-            self.bit_per_entry = bit_per_entry
+        self.bit_per_entry = 2 if bit_per_entry is None else bit_per_entry
         self.counting = counting
         self.__authors__ = ['Stephen Wu', 'TsumiNa']
 
@@ -78,13 +75,12 @@ class RDKitFP(BaseFeaturizer):
             x_ = x
             x = Chem.MolFromSmiles(x)
             if x is None:
-                raise ValueError('cannot convert Mol from SMILES %s' % x_)
-        if self.input_type == 'any':
-            if not isinstance(x, Chem.rdchem.Mol):
-                x_ = x
-                x = Chem.MolFromSmiles(x)
-                if x is None:
-                    raise ValueError('cannot convert Mol from SMILES %s' % x_)
+                raise ValueError(f'cannot convert Mol from SMILES {x_}')
+        if self.input_type == 'any' and not isinstance(x, Chem.rdchem.Mol):
+            x_ = x
+            x = Chem.MolFromSmiles(x)
+            if x is None:
+                raise ValueError(f'cannot convert Mol from SMILES {x_}')
 
         if self.counting:
             return count_fp(rdm.UnfoldedRDKFingerprintCountBased(x), dim=self.n_bits)
@@ -94,9 +90,9 @@ class RDKitFP(BaseFeaturizer):
     @property
     def feature_labels(self):
         if self.counting:
-            return ["rdkit_c:" + str(i) for i in range(self.n_bits)]
+            return [f"rdkit_c:{str(i)}" for i in range(self.n_bits)]
         else:
-            return ["rdkit:" + str(i) for i in range(self.n_bits)]
+            return [f"rdkit:{str(i)}" for i in range(self.n_bits)]
 
 
 class AtomPairFP(BaseFeaturizer):
@@ -145,10 +141,7 @@ class AtomPairFP(BaseFeaturizer):
         super().__init__(n_jobs=n_jobs, on_errors=on_errors, return_type=return_type, target_col=target_col)
         self.input_type = input_type
         self.n_bits = n_bits
-        if bit_per_entry is None:
-            self.bit_per_entry = 4
-        else:
-            self.bit_per_entry = bit_per_entry
+        self.bit_per_entry = 4 if bit_per_entry is None else bit_per_entry
         self.counting = counting
         self.__authors__ = ['Stephen Wu', 'TsumiNa']
 
@@ -157,13 +150,12 @@ class AtomPairFP(BaseFeaturizer):
             x_ = x
             x = Chem.MolFromSmiles(x)
             if x is None:
-                raise ValueError('cannot convert Mol from SMILES %s' % x_)
-        if self.input_type == 'any':
-            if not isinstance(x, Chem.rdchem.Mol):
-                x_ = x
-                x = Chem.MolFromSmiles(x)
-                if x is None:
-                    raise ValueError('cannot convert Mol from SMILES %s' % x_)
+                raise ValueError(f'cannot convert Mol from SMILES {x_}')
+        if self.input_type == 'any' and not isinstance(x, Chem.rdchem.Mol):
+            x_ = x
+            x = Chem.MolFromSmiles(x)
+            if x is None:
+                raise ValueError(f'cannot convert Mol from SMILES {x_}')
         if self.counting:
             return count_fp(rdMol.GetHashedAtomPairFingerprint(x, nBits=self.n_bits), dim=self.n_bits)
         else:
@@ -173,9 +165,9 @@ class AtomPairFP(BaseFeaturizer):
     @property
     def feature_labels(self):
         if self.counting:
-            return ['apfp_c:' + str(i) for i in range(self.n_bits)]
+            return [f'apfp_c:{str(i)}' for i in range(self.n_bits)]
         else:
-            return ['apfp:' + str(i) for i in range(self.n_bits)]
+            return [f'apfp:{str(i)}' for i in range(self.n_bits)]
 
 
 class TopologicalTorsionFP(BaseFeaturizer):
@@ -221,10 +213,7 @@ class TopologicalTorsionFP(BaseFeaturizer):
         super().__init__(n_jobs=n_jobs, on_errors=on_errors, return_type=return_type, target_col=target_col)
         self.input_type = input_type
         self.n_bits = n_bits
-        if bit_per_entry is None:
-            self.bit_per_entry = 4
-        else:
-            self.bit_per_entry = bit_per_entry
+        self.bit_per_entry = 4 if bit_per_entry is None else bit_per_entry
         self.counting = counting
         self.__authors__ = ['Stephen Wu', 'TsumiNa']
 
@@ -233,13 +222,12 @@ class TopologicalTorsionFP(BaseFeaturizer):
             x_ = x
             x = Chem.MolFromSmiles(x)
             if x is None:
-                raise ValueError('cannot convert Mol from SMILES %s' % x_)
-        if self.input_type == 'any':
-            if not isinstance(x, Chem.rdchem.Mol):
-                x_ = x
-                x = Chem.MolFromSmiles(x)
-                if x is None:
-                    raise ValueError('cannot convert Mol from SMILES %s' % x_)
+                raise ValueError(f'cannot convert Mol from SMILES {x_}')
+        if self.input_type == 'any' and not isinstance(x, Chem.rdchem.Mol):
+            x_ = x
+            x = Chem.MolFromSmiles(x)
+            if x is None:
+                raise ValueError(f'cannot convert Mol from SMILES {x_}')
         if self.counting:
             return count_fp(rdMol.GetHashedTopologicalTorsionFingerprint(x, nBits=self.n_bits), dim=self.n_bits)
         else:
@@ -249,9 +237,9 @@ class TopologicalTorsionFP(BaseFeaturizer):
     @property
     def feature_labels(self):
         if self.counting:
-            return ['ttfp_c:' + str(i) for i in range(self.n_bits)]
+            return [f'ttfp_c:{str(i)}' for i in range(self.n_bits)]
         else:
-            return ['ttfp:' + str(i) for i in range(self.n_bits)]
+            return [f'ttfp:{str(i)}' for i in range(self.n_bits)]
 
 
 class MACCS(BaseFeaturizer):
@@ -295,18 +283,17 @@ class MACCS(BaseFeaturizer):
             x_ = x
             x = Chem.MolFromSmiles(x)
             if x is None:
-                raise ValueError('cannot convert Mol from SMILES %s' % x_)
-        if self.input_type == 'any':
-            if not isinstance(x, Chem.rdchem.Mol):
-                x_ = x
-                x = Chem.MolFromSmiles(x)
-                if x is None:
-                    raise ValueError('cannot convert Mol from SMILES %s' % x_)
+                raise ValueError(f'cannot convert Mol from SMILES {x_}')
+        if self.input_type == 'any' and not isinstance(x, Chem.rdchem.Mol):
+            x_ = x
+            x = Chem.MolFromSmiles(x)
+            if x is None:
+                raise ValueError(f'cannot convert Mol from SMILES {x_}')
         return list(MAC.GenMACCSKeys(x))
 
     @property
     def feature_labels(self):
-        return ['maccs:' + str(i) for i in range(167)]
+        return [f'maccs:{str(i)}' for i in range(167)]
 
 
 class FCFP(BaseFeaturizer):
@@ -362,13 +349,12 @@ class FCFP(BaseFeaturizer):
             x_ = x
             x = Chem.MolFromSmiles(x)
             if x is None:
-                raise ValueError('cannot convert Mol from SMILES %s' % x_)
-        if self.input_type == 'any':
-            if not isinstance(x, Chem.rdchem.Mol):
-                x_ = x
-                x = Chem.MolFromSmiles(x)
-                if x is None:
-                    raise ValueError('cannot convert Mol from SMILES %s' % x_)
+                raise ValueError(f'cannot convert Mol from SMILES {x_}')
+        if self.input_type == 'any' and not isinstance(x, Chem.rdchem.Mol):
+            x_ = x
+            x = Chem.MolFromSmiles(x)
+            if x is None:
+                raise ValueError(f'cannot convert Mol from SMILES {x_}')
         if self.counting:
             return count_fp(rdMol.GetHashedMorganFingerprint(
                 x, radius=self.radius, nBits=self.n_bits, useFeatures=True), dim=self.n_bits)
@@ -379,9 +365,9 @@ class FCFP(BaseFeaturizer):
     @property
     def feature_labels(self):
         if self.counting:
-            return [f'fcfp{self.radius * 2}_c:' + str(i) for i in range(self.n_bits)]
+            return [f'fcfp{self.radius * 2}_c:{str(i)}' for i in range(self.n_bits)]
         else:
-            return [f'fcfp{self.radius * 2}:' + str(i) for i in range(self.n_bits)]
+            return [f'fcfp{self.radius * 2}:{str(i)}' for i in range(self.n_bits)]
 
 
 class ECFP(BaseFeaturizer):
@@ -437,13 +423,12 @@ class ECFP(BaseFeaturizer):
             x_ = x
             x = Chem.MolFromSmiles(x)
             if x is None:
-                raise ValueError('cannot convert Mol from SMILES %s' % x_)
-        if self.input_type == 'any':
-            if not isinstance(x, Chem.rdchem.Mol):
-                x_ = x
-                x = Chem.MolFromSmiles(x)
-                if x is None:
-                    raise ValueError('cannot convert Mol from SMILES %s' % x_)
+                raise ValueError(f'cannot convert Mol from SMILES {x_}')
+        if self.input_type == 'any' and not isinstance(x, Chem.rdchem.Mol):
+            x_ = x
+            x = Chem.MolFromSmiles(x)
+            if x is None:
+                raise ValueError(f'cannot convert Mol from SMILES {x_}')
         if self.counting:
             return count_fp(rdMol.GetHashedMorganFingerprint(x, radius=self.radius,
                                                              nBits=self.n_bits), dim=self.n_bits)
@@ -453,9 +438,9 @@ class ECFP(BaseFeaturizer):
     @property
     def feature_labels(self):
         if self.counting:
-            return [f'ecfp{self.radius * 2}_c:' + str(i) for i in range(self.n_bits)]
+            return [f'ecfp{self.radius * 2}_c:{str(i)}' for i in range(self.n_bits)]
         else:
-            return [f'ecfp{self.radius * 2}:' + str(i) for i in range(self.n_bits)]
+            return [f'ecfp{self.radius * 2}:{str(i)}' for i in range(self.n_bits)]
 
 
 class PatternFP(BaseFeaturizer):
@@ -501,18 +486,17 @@ class PatternFP(BaseFeaturizer):
             x_ = x
             x = Chem.MolFromSmiles(x)
             if x is None:
-                raise ValueError('cannot convert Mol from SMILES %s' % x_)
-        if self.input_type == 'any':
-            if not isinstance(x, Chem.rdchem.Mol):
-                x_ = x
-                x = Chem.MolFromSmiles(x)
-                if x is None:
-                    raise ValueError('cannot convert Mol from SMILES %s' % x_)
+                raise ValueError(f'cannot convert Mol from SMILES {x_}')
+        if self.input_type == 'any' and not isinstance(x, Chem.rdchem.Mol):
+            x_ = x
+            x = Chem.MolFromSmiles(x)
+            if x is None:
+                raise ValueError(f'cannot convert Mol from SMILES {x_}')
         return list(rdm.PatternFingerprint(x, fpSize=self.n_bits))
 
     @property
     def feature_labels(self):
-        return ['patfp:' + str(i) for i in range(self.n_bits)]
+        return [f'patfp:{str(i)}' for i in range(self.n_bits)]
 
 
 class LayeredFP(BaseFeaturizer):
@@ -558,18 +542,17 @@ class LayeredFP(BaseFeaturizer):
             x_ = x
             x = Chem.MolFromSmiles(x)
             if x is None:
-                raise ValueError('cannot convert Mol from SMILES %s' % x_)
-        if self.input_type == 'any':
-            if not isinstance(x, Chem.rdchem.Mol):
-                x_ = x
-                x = Chem.MolFromSmiles(x)
-                if x is None:
-                    raise ValueError('cannot convert Mol from SMILES %s' % x_)
+                raise ValueError(f'cannot convert Mol from SMILES {x_}')
+        if self.input_type == 'any' and not isinstance(x, Chem.rdchem.Mol):
+            x_ = x
+            x = Chem.MolFromSmiles(x)
+            if x is None:
+                raise ValueError(f'cannot convert Mol from SMILES {x_}')
         return list(rdm.LayeredFingerprint(x, fpSize=self.n_bits))
 
     @property
     def feature_labels(self):
-        return ['layfp:' + str(i) for i in range(self.n_bits)]
+        return [f'layfp:{str(i)}' for i in range(self.n_bits)]
 
 
 class MHFP(BaseFeaturizer):
@@ -627,18 +610,17 @@ class MHFP(BaseFeaturizer):
             x_ = x
             x = Chem.MolFromSmiles(x)
             if x is None:
-                raise ValueError('cannot convert Mol from SMILES %s' % x_)
-        if self.input_type == 'any':
-            if not isinstance(x, Chem.rdchem.Mol):
-                x_ = x
-                x = Chem.MolFromSmiles(x)
-                if x is None:
-                    raise ValueError('cannot convert Mol from SMILES %s' % x_)
+                raise ValueError(f'cannot convert Mol from SMILES {x_}')
+        if self.input_type == 'any' and not isinstance(x, Chem.rdchem.Mol):
+            x_ = x
+            x = Chem.MolFromSmiles(x)
+            if x is None:
+                raise ValueError(f'cannot convert Mol from SMILES {x_}')
         return list(self.mhfp.EncodeSECFPMol(x, radius=self.radius, length=self.n_bits))
 
     @property
     def feature_labels(self):
-        return [f'secfp{self.radius * 2}:' + str(i) for i in range(self.n_bits)]
+        return [f'secfp{self.radius * 2}:{str(i)}' for i in range(self.n_bits)]
 
 
 class DescriptorFeature(BaseFeaturizer):
@@ -729,17 +711,17 @@ class DescriptorFeature(BaseFeaturizer):
             x_ = x
             x = Chem.MolFromSmiles(x)
             if x is None:
-                raise ValueError('cannot convert Mol from SMILES %s' % x_)
+                raise ValueError(f'cannot convert Mol from SMILES {x_}')
             if self.add_Hs:
                 x = Chem.AddHs(x)
                 if x is None:
-                    raise ValueError('cannot add Hs to Mol for %s' % x_)
+                    raise ValueError(f'cannot add Hs to Mol for {x_}')
         if self.input_type == 'any':
             if not isinstance(x, Chem.rdchem.Mol):
                 x_ = x
                 x = Chem.MolFromSmiles(x)
                 if x is None:
-                    raise ValueError('cannot convert Mol from SMILES %s' % x_)
+                    raise ValueError(f'cannot convert Mol from SMILES {x_}')
             if self.add_Hs:
                 x = Chem.AddHs(x)
                 if x is None:

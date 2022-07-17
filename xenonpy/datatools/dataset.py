@@ -28,11 +28,7 @@ class Dataset(object):
         self._backend = backend
         self._files = None
 
-        if len(paths) == 0:
-            self._paths = ('.',)
-        else:
-            self._paths = paths
-
+        self._paths = paths or ('.', )
         if not prefix:
             prefix = ()
         self._prefix = prefix
@@ -61,8 +57,10 @@ class Dataset(object):
 
                     if fn in self._files:
                         warn(
-                            "file %s with name %s already bind to %s and will be ignored" %
-                            (fp, fn, self._files[fn]), RuntimeWarning)
+                            f"file {fp} with name {fn} already bind to {self._files[fn]} and will be ignored",
+                            RuntimeWarning,
+                        )
+
                     else:
                         self._files[fn] = fp
                         setattr(self.__class__, fn, property(_nest(fp)))
@@ -71,7 +69,7 @@ class Dataset(object):
         for path in self._paths:
             path = Path(path).expanduser().absolute()
             if not path.exists():
-                raise RuntimeError('%s not exists' % str(path))
+                raise RuntimeError(f'{str(path)} not exists')
             make(path)
 
     @classmethod
@@ -122,7 +120,7 @@ class Dataset(object):
         if isinstance(save_to, str):
             save_to = Path(save_to)
         if not isinstance(save_to, Path) or not save_to.is_dir():
-            raise RuntimeError('%s is not a legal path or not point to a dir' % save_to)
+            raise RuntimeError(f'{save_to} is not a legal path or not point to a dir')
 
         file_ = str(save_to / filename)
         with open(file_, 'wb') as f:
@@ -133,11 +131,9 @@ class Dataset(object):
         return file_
 
     def __repr__(self):
-        cont_ls = ['<{}> includes:'.format(self.__class__.__name__)]
+        cont_ls = [f'<{self.__class__.__name__}> includes:']
 
-        for k, v in self._files.items():
-            cont_ls.append('"{}": {}'.format(k, v))
-
+        cont_ls.extend(f'"{k}": {v}' for k, v in self._files.items())
         return '\n'.join(cont_ls)
 
     @property

@@ -145,23 +145,22 @@ class MDL(BaseEstimator, metaclass=TimedMetaClass):
             Querying object.
         """
 
-        if len(query) > 0:
+        if query:
             return QueryModelDetails(dict(query=query), api_key=self.api_key, endpoint=self.endpoint)
-        else:
-            variables = dict(
-                modelset_has=modelset_has,
-                property_has=property_has,
-                descriptor_has=descriptor_has,
-                method_has=method_has,
-                lang_has=lang_has,
-                regression=regression,
-                transferred=transferred,
-                deprecated=deprecated,
-                succeed=succeed
-            )
-            variables = {k: v for k, v in variables.items() if v is not None}
+        variables = dict(
+            modelset_has=modelset_has,
+            property_has=property_has,
+            descriptor_has=descriptor_has,
+            method_has=method_has,
+            lang_has=lang_has,
+            regression=regression,
+            transferred=transferred,
+            deprecated=deprecated,
+            succeed=succeed
+        )
+        variables = {k: v for k, v in variables.items() if v is not None}
 
-            return QueryModelDetailsWith(variables, api_key=self.api_key, endpoint=self.endpoint)
+        return QueryModelDetailsWith(variables, api_key=self.api_key, endpoint=self.endpoint)
 
     def upload_model(self, *,
                      modelset_id: int,
@@ -263,7 +262,7 @@ class MDL(BaseEstimator, metaclass=TimedMetaClass):
         query
             Querying object.
         """
-        if len(model_ids) == 0:
+        if not model_ids:
             raise RuntimeError('input is not non-able')
         if len(model_ids) == 1:
             return GetModelUrl({'id': model_ids[0]}, api_key=self.api_key, endpoint=self.endpoint)
@@ -406,17 +405,16 @@ class MDL(BaseEstimator, metaclass=TimedMetaClass):
 
         if query is not None:
             return QueryModelsets(dict(query=query), api_key=self.api_key, endpoint=self.endpoint)
-        else:
-            variables = dict(
-                name_has=name_has,
-                tag_has=tag_has,
-                describe_has=describe_has,
-                private=private,
-                deprecated=deprecated,
-            )
-            variables = {k: v for k, v in variables.items() if v is not None}
+        variables = dict(
+            name_has=name_has,
+            tag_has=tag_has,
+            describe_has=describe_has,
+            private=private,
+            deprecated=deprecated,
+        )
+        variables = {k: v for k, v in variables.items() if v is not None}
 
-            return QueryModelsetsWith(variables, api_key=self.api_key, endpoint=self.endpoint)
+        return QueryModelsetsWith(variables, api_key=self.api_key, endpoint=self.endpoint)
 
     def update_modelset(self, *,
                         modelset_id: int,
@@ -546,15 +544,14 @@ class MDL(BaseEstimator, metaclass=TimedMetaClass):
 
         if query is not None:
             return QueryDescriptors(dict(query=query), api_key=self.api_key, endpoint=self.endpoint)
-        else:
-            variables = dict(
-                name_has=name_has,
-                fullName_has=fullname_has,
-                describe_has=describe_has,
-            )
-            variables = {k: v for k, v in variables.items() if v is not None}
+        variables = dict(
+            name_has=name_has,
+            fullName_has=fullname_has,
+            describe_has=describe_has,
+        )
+        variables = {k: v for k, v in variables.items() if v is not None}
 
-            return QueryDescriptorsWith(variables, api_key=self.api_key, endpoint=self.endpoint)
+        return QueryDescriptorsWith(variables, api_key=self.api_key, endpoint=self.endpoint)
 
     def update_descriptor(self, *,
                           name: str,
@@ -671,15 +668,14 @@ class MDL(BaseEstimator, metaclass=TimedMetaClass):
 
         if query is not None:
             return QueryMethods(dict(query=query), api_key=self.api_key, endpoint=self.endpoint)
-        else:
-            variables = dict(
-                name_has=name_has,
-                fullName_has=fullname_has,
-                describe_has=describe_has,
-            )
-            variables = {k: v for k, v in variables.items() if v is not None}
+        variables = dict(
+            name_has=name_has,
+            fullName_has=fullname_has,
+            describe_has=describe_has,
+        )
+        variables = {k: v for k, v in variables.items() if v is not None}
 
-            return QueryMethodsWith(variables, api_key=self.api_key, endpoint=self.endpoint)
+        return QueryMethodsWith(variables, api_key=self.api_key, endpoint=self.endpoint)
 
     def update_method(self, *,
                       name: str,
@@ -802,17 +798,16 @@ class MDL(BaseEstimator, metaclass=TimedMetaClass):
 
         if query is not None:
             return QueryProperties(dict(query=query), api_key=self.api_key, endpoint=self.endpoint)
-        else:
-            variables = dict(
-                name_has=name_has,
-                fullName_has=fullname_has,
-                describe_has=describe_has,
-                symbol_has=symbol_has,
-                unit_has=unit_has,
-            )
-            variables = {k: v for k, v in variables.items() if v is not None}
+        variables = dict(
+            name_has=name_has,
+            fullName_has=fullname_has,
+            describe_has=describe_has,
+            symbol_has=symbol_has,
+            unit_has=unit_has,
+        )
+        variables = {k: v for k, v in variables.items() if v is not None}
 
-            return QueryPropertiesWith(variables, api_key=self.api_key, endpoint=self.endpoint)
+        return QueryPropertiesWith(variables, api_key=self.api_key, endpoint=self.endpoint)
 
     def update_property(self, *,
                         name: str,
@@ -929,7 +924,7 @@ class MDL(BaseEstimator, metaclass=TimedMetaClass):
         -------
 
         """
-        if len(model_ids) == 0:
+        if not model_ids:
             raise RuntimeError('input can not be empty')
         if len(model_ids) == 1:
             if isinstance(model_ids[0], pd.Series):

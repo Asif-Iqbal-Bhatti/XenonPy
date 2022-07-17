@@ -25,7 +25,7 @@ def data():
     model2 = SequentialLinear(10, 1, h_neurons=(7, 4))
     descriptor1 = np.random.rand(10, 10)
     descriptor2 = np.random.rand(20, 10)
-    index = ['id_' + str(i) for i in range(10)]
+    index = [f'id_{str(i)}' for i in range(10)]
     df = pd.DataFrame(descriptor1, index=index)
 
     # ignore numpy warning
@@ -65,9 +65,12 @@ def test_frozen_featurizer_2(data):
     assert ff_features.index.tolist() == list(data[3])
 
     _hlayers = [7, 4]
-    labels = ['L(' + str(i - len(_hlayers)) + ')_' + str(j + 1)
-              for i in range(2)
-              for j in range(_hlayers[i])]
+    labels = [
+        f'L({str(i - len(_hlayers))})_{str(j + 1)}'
+        for i in range(2)
+        for j in range(_hlayers[i])
+    ]
+
     assert ff_features.columns.tolist() == list(labels)
 
     ff = FrozenFeaturizer(data[5])
@@ -77,9 +80,12 @@ def test_frozen_featurizer_2(data):
     assert ff_features.index.tolist() == list(data[3])
 
     _hlayers = [7, 4]
-    labels = ['L(' + str(i - len(_hlayers)) + ')_' + str(j + 1)
-              for i in range(2)
-              for j in range(_hlayers[i])]
+    labels = [
+        f'L({str(i - len(_hlayers))})_{str(j + 1)}'
+        for i in range(2)
+        for j in range(_hlayers[i])
+    ]
+
     assert ff_features.columns.tolist() == list(labels)
 
 
@@ -124,14 +130,21 @@ def test_frozen_featurizer_5(data):
     ff = FrozenFeaturizer(data[5])
     ff_features = ff.transform(data[1], depth=2, return_type='df')
 
-    desc_ori = []
-    for i in [1, 2]:
-        desc_ori.append(ff_features[ff_features.columns[[f'L(-{i})' in s for s in ff_features.columns.values]]])
+    desc_ori = [
+        ff_features[
+            ff_features.columns[
+                [f'L(-{i})' in s for s in ff_features.columns.values]
+            ]
+        ]
+        for i in [1, 2]
+    ]
 
     desc_new = []
     for i in [1, 2]:
-        for j in [1, 2]:
-            desc_new.append(ff.transform(data[1], depth=j, n_layer=i, return_type='df'))
+        desc_new.extend(
+            ff.transform(data[1], depth=j, n_layer=i, return_type='df')
+            for j in [1, 2]
+        )
 
     for i in range(2):
         tmp = desc_new[i] == desc_ori[i]

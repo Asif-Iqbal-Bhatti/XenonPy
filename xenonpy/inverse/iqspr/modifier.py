@@ -31,7 +31,7 @@ class MolConvertError(ProposalError):
         self.new_smi = new_smi
         self.old_smi = None
 
-        super().__init__('can not convert %s to Mol' % new_smi)
+        super().__init__(f'can not convert {new_smi} to Mol')
 
 
 class NGramTrainingError(ProposalError):
@@ -39,8 +39,9 @@ class NGramTrainingError(ProposalError):
     def __init__(self, error, smi):
         self.old_smi = smi
 
-        super().__init__('training failed for %s, because of <%s>: %s' %
-                         (smi, error.__class__.__name__, error))
+        super().__init__(
+            f'training failed for {smi}, because of <{error.__class__.__name__}>: {error}'
+        )
 
 
 class NGram(BaseProposal):
@@ -205,8 +206,6 @@ class NGram(BaseProposal):
             return error.old_smi
         if isinstance(error, MolConvertError):
             return error.old_smi
-        if isinstance(error, NGramTrainingError):
-            pass
 
     @property
     def ngram_table(self):
@@ -227,7 +226,7 @@ class NGram(BaseProposal):
                                 min(n_del + 1,
                                     len(ext_smi) - self.min_len))  # at least leave min_len char
         # add until reaching '!' or a given max value
-        for i in range(self.max_len - len(ext_smi)):
+        for _ in range(self.max_len - len(ext_smi)):
             ext_smi, _ = self.sample_next_char(ext_smi)
             if ext_smi['esmi'].iloc[-1] == '!':
                 return ext_smi  # stop when hitting '!', assume must be valid SMILES
@@ -253,14 +252,16 @@ class NGram(BaseProposal):
         smi_pat = r'(\[.*?\]|Br|Cl|(?<=%)[0-9][0-9]|\w|\W)'
 
         # smi_list = list(filter(None, re.split(smi_pat, smiles)))
-        smi_list = list(filter(lambda x: not ((x == "") or (x == "%")), re.split(smi_pat, smiles)))
+        smi_list = list(
+            filter(lambda x: x not in ["", "%"], re.split(smi_pat, smiles))
+        )
 
-        # combine bond with next token only if the next token isn't a number
-        # assume SMILES does not end with a bonding character!
-        tmp_idx = [
-            i for i, x in enumerate(smi_list) if ((x in "-=#") and (not smi_list[i + 1].isdigit()))
-        ]
-        if len(tmp_idx) > 0:
+
+        if tmp_idx := [
+            i
+            for i, x in enumerate(smi_list)
+            if ((x in "-=#") and (not smi_list[i + 1].isdigit()))
+        ]:
             for i in tmp_idx:
                 smi_list[i + 1] = smi_list[i] + smi_list[i + 1]
             smi_list = np.delete(smi_list, tmp_idx).tolist()
@@ -407,7 +408,10 @@ class NGram(BaseProposal):
                             # index for char with substring length not less than order
                             idx_O = [x for x in range(len(tar_substr)) if len(tar_substr[x]) > iO]
                             for iC in idx_O:
-                                if not tar_char[iC] in self._table[iO][iB][iR].columns.tolist():
+                                if (
+                                    tar_char[iC]
+                                    not in self._table[iO][iB][iR].columns.tolist()
+                                ):
                                     self._table[iO][iB][iR][tar_char[iC]] = 0
                                 tmp_row = str(tar_substr[iC][-(iO + 1):])
                                 if tmp_row not in self._table[iO][iB][iR].index.tolist():
@@ -444,7 +448,7 @@ class NGram(BaseProposal):
             try:
                 _fit_one(self.smi2esmi(smi))
             except Exception as e:
-                warnings.warn('NGram training failed for %s' % smi, RuntimeWarning)
+                warnings.warn(f'NGram training failed for {smi}', RuntimeWarning)
                 e = NGramTrainingError(e, smi)
                 self.on_errors(e)
 
@@ -517,10 +521,7 @@ class NGram(BaseProposal):
 
     @classmethod
     def del_char(cls, ext_smi, n_char):
-        if n_char > 0:
-            return ext_smi[:-n_char]
-        else:
-            return ext_smi
+        return ext_smi[:-n_char] if n_char > 0 else ext_smi
 
     # need to make sure esmi_pd is a completed SMILES to use this function
     # todo: kekuleSmiles?
@@ -536,19 +537,18 @@ class NGram(BaseProposal):
 
     def validator(self, ext_smi):
         # delete all ending '(' or '&'
-        for i in range(len(ext_smi)):
-            if not ((ext_smi['esmi'].iloc[-1] == '(') or (ext_smi['esmi'].iloc[-1] == '&')):
+        for _ in range(len(ext_smi)):
+            if ext_smi['esmi'].iloc[-1] not in ['(', '&']:
                 break
             ext_smi = self.del_char(ext_smi, 1)
         # delete or fill in ring closing
         flag_ring = ext_smi['n_ring'].iloc[-1] > 0
-        for i in range(len(ext_smi)):  # max to double the length of current SMILES
-            if flag_ring and (np.random.random() < 0.7):  # 50/50 for adding two new char.
-                # add a character
-                ext_smi, _ = self.sample_next_char(ext_smi)
-                flag_ring = ext_smi['n_ring'].iloc[-1] > 0
-            else:
+        for _ in range(len(ext_smi)):
+            if not flag_ring or np.random.random() >= 0.7:
                 break
+            # add a character
+            ext_smi, _ = self.sample_next_char(ext_smi)
+            flag_ring = ext_smi['n_ring'].iloc[-1] > 0
         if flag_ring:
             # prepare for delete (1st letter shall not be '&')
             tmp_idx = ext_smi.iloc[1:].index
@@ -556,24 +556,22 @@ class NGram(BaseProposal):
             num_open = tmp_idx[tmp_count == 1].values.tolist()
             num_open.reverse()
             num_close = tmp_idx[tmp_count == -1].values.tolist()
-            idx_pop = []
-            for i in num_close:
-                idx_pop.append(ext_smi['esmi'][i])
+            idx_pop = [ext_smi['esmi'][i] for i in num_close]
             for ii, i in enumerate(idx_pop):
-                ext_smi['esmi'][num_close[ii]] += sum([x < i for x in idx_pop[ii + 1:]]) - i
+                ext_smi['esmi'][num_close[ii]] += sum(x < i for x in idx_pop[ii + 1:]) - i
                 num_open.pop(i)
             # delete all irrelevant rows and reconstruct esmi
             ext_smi = self.smi2esmi(
                 self.esmi2smi(ext_smi.drop(ext_smi.index[num_open]).reset_index(drop=True)))
             ext_smi = ext_smi.iloc[:-1]  # remove the '!'
 
-            # delete ':' that are not inside a ring
+                # delete ':' that are not inside a ring
         # tmp_idx = esmi_pd.index[(esmi_pd['esmi'] == ':') & (esmi_pd['n_ring'] < 1)]
         # if len(tmp_idx) > 0:
         #     esmi_pd = smi2esmi(esmi2smi(esmi_pd.drop(tmp_idx).reset_index(drop=True)))
         #     esmi_pd = esmi_pd.iloc[:-1] # remove the '!'
         # fill in branch closing (last letter shall not be '(')
-        for i in range(ext_smi['n_br'].iloc[-1]):
+        for _ in range(ext_smi['n_br'].iloc[-1]):
             ext_smi = self.add_char(ext_smi, ')')
 
         return ext_smi
@@ -594,13 +592,13 @@ class NGram(BaseProposal):
             The proposed SMILES from the given SMILES.
         """
         new_smis = []
-        for i, smi in enumerate(smiles):
+        for smi in smiles:
             ext_smi = self.smi2esmi(smi)
             try:
                 new_ext_smi = self.modify(ext_smi)
                 new_smi = self.esmi2smi(new_ext_smi)
                 if Chem.MolFromSmiles(new_smi) is None:
-                    warnings.warn('can not convert %s to Mol' % new_smi, RuntimeWarning)
+                    warnings.warn(f'can not convert {new_smi} to Mol', RuntimeWarning)
                     raise MolConvertError(new_smi)
                 new_smis.append(new_smi)
 
@@ -704,11 +702,7 @@ class NGram(BaseProposal):
         else:
             raise TypeError('weight must be <int> or <float> or a list of them')
 
-        if overwrite:
-            tmp_n_gram = self  # do not use deepcopy here
-        else:
-            tmp_n_gram = deepcopy(self)
-
+        tmp_n_gram = self if overwrite else deepcopy(self)
         for i, tab in enumerate(ngram_tab):
             tmp_n_gram._merge_table(ngram_tab=tab, weight=weight[i])
 

@@ -41,9 +41,7 @@ class Timer(object):
         @property
         def elapsed(self):
             all_ = sum(self.times)
-            dt = 0.0
-            if self.start:
-                dt = time.perf_counter() - self.start
+            dt = time.perf_counter() - self.start if self.start else 0.0
             return all_ + dt
 
         def __repr__(self):
@@ -55,12 +53,12 @@ class Timer(object):
 
     def start(self, fn_name='main'):
         if self._timers[fn_name].start is not None:
-            raise RuntimeError('Timer <%s> Already started' % fn_name)
+            raise RuntimeError(f'Timer <{fn_name}> Already started')
         self._timers[fn_name].start = self._func()
 
     def stop(self, fn_name='main'):
         if self._timers[fn_name].start is None:
-            raise RuntimeError('Timer <%s> not started' % fn_name)
+            raise RuntimeError(f'Timer <{fn_name}> not started')
         elapsed = self._func() - self._timers[fn_name].start
         self._timers[fn_name].times.append(elapsed)
         self._timers[fn_name].start = None
@@ -69,11 +67,11 @@ class Timer(object):
     def elapsed(self):
         if 'main' in self._timers:
             return self._timers['main'].elapsed
-        return sum([v.elapsed for v in self._timers.values()])
+        return sum(v.elapsed for v in self._timers.values())
 
     def __repr__(self):
         tmp = {k: v.elapsed for k, v in self._timers.items()}
-        tmp = {k: v for k, v in sorted(tmp.items(), key=lambda t: t[1])}
+        tmp = dict(sorted(tmp.items(), key=lambda t: t[1]))
         return f'Total elapsed: {timedelta(seconds=self.elapsed)} <seconds>\n' + \
                '\n'.join([f'  |- {k}: {timedelta(seconds=v)}' for k, v in
                           sorted(tmp.items(), key=lambda t: t[1], reverse=True)])
@@ -105,7 +103,7 @@ class TimedMetaClass(type):
                 return rt
 
             return fn_
-        raise TypeError('Need <FunctionType> or <MethodType> but got %s' % type(fn))
+        raise TypeError(f'Need <FunctionType> or <MethodType> but got {type(fn)}')
 
     def __new__(mcs, name, bases, attrs):
 
@@ -136,7 +134,7 @@ class TimedMetaClass(type):
 class Singleton(type):
     _instances = {}
 
-    def __call__(cls, *args, **kwargs):
-        if cls not in cls._instances:
-            cls._instances[cls] = super(Singleton, cls).__call__(*args, **kwargs)
-        return cls._instances[cls]
+    def __call__(self, args, **kwargs):
+        if self not in self._instances:
+            self._instances[self] = super(Singleton, self).__call__(*args, **kwargs)
+        return self._instances[self]

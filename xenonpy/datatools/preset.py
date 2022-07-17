@@ -97,10 +97,7 @@ class Preset(Dataset, metaclass=Singleton):
             sha256 = {}
 
         # fetch data from source if not in local
-        if not to:
-            url = get_dataset_url(data)
-        else:
-            url = get_dataset_url(data, to)
+        url = get_dataset_url(data, to) if to else get_dataset_url(data)
         print('fetching dataset `{0}` from {1}.'.format(data, url))
         self.from_http(url, save_to=str(self._dataset))
 
@@ -141,11 +138,11 @@ class Preset(Dataset, metaclass=Singleton):
             ]
 
             entries = []
-            mpid_groups = [g for g in grouper(mp_ids, len(mp_ids) // 10)]
+            mpid_groups = list(grouper(mp_ids, len(mp_ids) // 10))
 
             with MPRester(api_key) as mpr:
                 for group in tqdm(mpid_groups):
-                    mpid_list = [id for id in filter(None, group)]
+                    mpid_list = list(filter(None, group))
                     chunk = mpr.query({"material_id": {"$in": mpid_list}}, mp_props)
                     entries.extend(chunk)
 
@@ -181,7 +178,9 @@ class Preset(Dataset, metaclass=Singleton):
                 self._make_index(prefix=['dataset'])
                 return
 
-        raise ValueError('no available key(s) in %s, these can only be %s' % (keys, self.__builder__))
+        raise ValueError(
+            f'no available key(s) in {keys}, these can only be {self.__builder__}'
+        )
 
     def _check(self, data):
 

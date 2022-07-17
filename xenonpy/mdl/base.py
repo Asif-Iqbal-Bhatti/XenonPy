@@ -64,10 +64,11 @@ class BaseQuery(BaseEstimator, metaclass=TimedMetaClass):
         return query_vars
 
     def __call__(self, *querying_vars, file=None, return_json=None):
-        if len(querying_vars) == 0:
-            query = self.gql(*self.queryable)
-        else:
-            query = self.gql(*self.check_query_vars(*querying_vars))
+        query = (
+            self.gql(*self.check_query_vars(*querying_vars))
+            if querying_vars
+            else self.gql(*self.queryable)
+        )
 
         payload = json.dumps({'query': query, 'variables': self._variables})
 
@@ -100,7 +101,7 @@ class BaseQuery(BaseEstimator, metaclass=TimedMetaClass):
             except json.JSONDecodeError:
                 message = "Server did not responce."
 
-            raise HTTPError('status_code: %s, %s' % (ret.status_code, message))
+            raise HTTPError(f'status_code: {ret.status_code}, {message}')
         ret = ret.json()
         if 'errors' in ret:
             raise ValueError(ret['errors'][0]['message'])

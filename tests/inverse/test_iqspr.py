@@ -48,7 +48,7 @@ def data():
 
     like_mdl = MyLogLikelihood()
     ngram = NGram()
-    ngram.fit(X[0:20], train_order=5)
+    ngram.fit(X[:20], train_order=5)
     iqspr = IQSPR(estimator=bre, modifier=ngram)
     # prepare test data
     yield dict(ecfp=ecfp, rdkitfp=rdkitfp, bre=bre, bre2=bre2, like_mdl=like_mdl, ngram=ngram, iqspr=iqspr, pg=(X, y))
@@ -275,7 +275,7 @@ def test_iqspr_1(data):
     X, y = data['pg']
     bre.fit(X, y)
     bre.update_targets(reset=True, bandgap=(0.1, 0.2), density=(0.9, 1.2))
-    ngram.fit(data['pg'][0][0:20], train_order=10)
+    ngram.fit(data['pg'][0][:20], train_order=10)
     beta = np.linspace(0.05, 1, 10)
     for s, ll, p, f in iqspr(data['pg'][0][:5], beta, yield_lpf=True):
         assert np.abs(np.sum(p) - 1.0) < 1e-5
@@ -320,13 +320,10 @@ def test_iqspr_resample1(data):
             'O([*])C(=O)OC(C=C1)=CC=C1C(C=C1)=CC=C1CC(C=C1)=CC=C1C(C=C1)=CC=C1C(C=C1)=CC=C1C(C=C1)=CC=C1C(C=C1)=CC=C1C(=S)'
         ]
     ]
-    c0 = 0
-    for s, ll, p, f in iqspr(data['pg'][0][:3], beta, yield_lpf=True):
+    for c0, (s, ll, p, f) in enumerate(iqspr(data['pg'][0][:3], beta, yield_lpf=True)):
         assert np.abs(np.sum(p) - 1.0) < 1e-5
         assert np.sum(f) == 3
         assert np.all(np.sort(s) == np.array(soln1[c0]))
-        c0 += 1
-
     np.random.seed(0)
     iqspr = IQSPR(estimator=like_mdl, modifier=ngram, r_ESS=1)
     soln2 = [[
@@ -337,12 +334,10 @@ def test_iqspr_resample1(data):
                  'O([*])C(=O)OC(C=C1)=CC=C1C(C=C1)=CC=C1CC(C=C1)=CC=C1C(C=C1)=CC=C1([*])',
                  'O([*])C(=O)OC(C=C1)=CC=C1C(C=C1)=CC=C1CC(C=C1)=CC=C1C(C=C1)=CC=C1C(=S)'
              ]]
-    c0 = 0
-    for s, ll, p, f in iqspr(data['pg'][0][:3], beta, yield_lpf=True):
+    for c0, (s, ll, p, f) in enumerate(iqspr(data['pg'][0][:3], beta, yield_lpf=True)):
         assert np.abs(np.sum(p) - 1.0) < 1e-5
         assert np.sum(f) == 3
         assert np.all(np.sort(s) == np.array(soln2[c0]))
-        c0 += 1
 
 
 def test_iqspr4df_unique1(data):
@@ -363,8 +358,9 @@ def test_iqspr4df_unique1(data):
 
 @pytest.fixture
 def test_df():
-    input = pd.DataFrame([[0, 1], [3, 3], [1, 3], [1, 2], [1, 3]], columns=['a', 'b'])
-    return input
+    return pd.DataFrame(
+        [[0, 1], [3, 3], [1, 3], [1, 2], [1, 3]], columns=['a', 'b']
+    )
 
 
 def test_iqspr4df_two_col(data, test_df):

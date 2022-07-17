@@ -38,7 +38,8 @@ class ArrayDataset(TensorDataset):
             data = torch.from_numpy(data)
         if not isinstance(data, torch.Tensor):
             raise RuntimeError(
-                'input must be pd.DataFrame, pd.Series, np.ndarray, or torch.Tensor but got %s'
-                % data.__class__)
+                f'input must be pd.DataFrame, pd.Series, np.ndarray, or torch.Tensor but got {data.__class__}'
+            )
+
 
         return data.to(dtype)

@@ -141,9 +141,8 @@ class BaseLogLikelihoodSet(BaseEstimator, metaclass=TimedMetaClass):
                 if isinstance(x, list):
                     return pd.DataFrame(pd.Series(x), columns=keys)
 
-                if isinstance(x, np.ndarray):
-                    if len(x.shape) == 1:
-                        return pd.DataFrame(x, columns=keys)
+                if isinstance(x, np.ndarray) and len(x.shape) == 1:
+                    return pd.DataFrame(x, columns=keys)
 
                 if isinstance(x, pd.Series):
                     return pd.DataFrame(x.values, columns=keys, index=x.index)
