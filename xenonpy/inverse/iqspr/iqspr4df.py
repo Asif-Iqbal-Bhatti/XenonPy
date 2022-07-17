@@ -34,12 +34,10 @@ class IQSPR4DF(BaseSMC):
         self._proposal = modifier
         self._log_likelihood = estimator
         self._r_ESS = r_ESS
-        if isinstance(sample_col, str):
+        if isinstance(sample_col, str) or not hasattr(sample_col, '__len__'):
             self.sample_col = [sample_col]
-        elif hasattr(sample_col, '__len__'):
-            self.sample_col = sample_col
         else:
-            self.sample_col = [sample_col]
+            self.sample_col = sample_col
 
     def resample(self, sims, freq, size, p):
         if np.sum(np.power(p, 2)) <= (self._r_ESS*np.sum(freq)):
@@ -63,10 +61,7 @@ class IQSPR4DF(BaseSMC):
             The number of times each of the unique values comes up in the original array
         """
 
-        if self.sample_col is None:
-            sample_col = x.columns.values
-        else:
-            sample_col = self.sample_col
+        sample_col = x.columns.values if self.sample_col is None else self.sample_col
         uni = x.drop_duplicates(subset=sample_col).reset_index(drop = True)
         freq = []
         for index,row in uni.iterrows():

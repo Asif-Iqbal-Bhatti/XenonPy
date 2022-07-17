@@ -34,7 +34,7 @@ def combine_fragments(smis_base, smis_frag):
     # rearrange base SMILES to avoid 1st char = '*' (assume no '**')
     if len(idx_base) == 1 and idx_base[0] == 0:
         smis_base_head = Chem.MolToSmiles(mols_base,rootedAtAtom=1)
-    elif len(idx_base) == 0:
+    elif not idx_base:
         smis_base_head = smis_base + '*'
     else:
         smis_base_head = smis_base
@@ -56,16 +56,19 @@ def combine_fragments(smis_base, smis_frag):
     mols_frag = Chem.MolFromSmiles(smis_frag)
     if mols_frag is None:
         raise RuntimeError('Invalid frag SMILES!')
-    idx_frag = [i for i in range(mols_frag.GetNumAtoms()) if mols_frag.GetAtomWithIdx(i).GetSymbol() == '*']
-    if len(idx_frag) == 0: # if -*, =*, and/or #* exist, not counted as * right now
-        esmi_frag = ngram.smi2esmi(smis_frag)
-        # remove last '!'
-        esmi_frag = esmi_frag[:-1]
-    else:
+    if idx_frag := [
+        i
+        for i in range(mols_frag.GetNumAtoms())
+        if mols_frag.GetAtomWithIdx(i).GetSymbol() == '*'
+    ]:
         esmi_frag = ngram.smi2esmi(Chem.MolToSmiles(mols_frag,rootedAtAtom=idx_frag[0]))
         # remove leading '*' and last '!'
         esmi_frag = esmi_frag[1:-1]
 
+    else:
+        esmi_frag = ngram.smi2esmi(smis_frag)
+        # remove last '!'
+        esmi_frag = esmi_frag[:-1]
     # check open rings of base SMILES
     nRing_base = esmi_base['n_ring'].loc[idx_base]
 

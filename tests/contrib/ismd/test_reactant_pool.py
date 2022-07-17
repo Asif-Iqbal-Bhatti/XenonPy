@@ -86,8 +86,7 @@ class Reactor():
         Returns:
             product_list: all_predictions is a list of `batch_size` lists of `n_best` predictions
         """
-        product_list = [r.replace('.', '') for r in reactant_list]
-        return product_list
+        return [r.replace('.', '') for r in reactant_list]
 
 
 def test_poolAssignment():
@@ -145,12 +144,12 @@ def test_singleProposal():
     new_list = [test_pool.single_proposal(reactant) for reactant in sample_df[test_pool._sample_reactant_idx_col]]
 
     assert len(old_list) == len(new_list)
-    assert all([len(o) == len(n) for o, n in zip(old_list, new_list)])
+    assert all(len(o) == len(n) for o, n in zip(old_list, new_list))
 
     def list_only_one_diff(list1, list2):
         return len(set(list1) - set(list2)) == 1
 
-    assert all([list_only_one_diff(o, n) for o, n in zip(old_list, new_list)])
+    assert all(list_only_one_diff(o, n) for o, n in zip(old_list, new_list))
 
 
 def test_reactant_id2smiles():
@@ -174,10 +173,13 @@ def test_reactant_id2smiles():
     ]
 
     assert len(sample_df[test_pool._sample_reactant_idx_col]) == len(sample_df[test_pool._sample_reactant_smiles_col])
-    assert all([
-        len(idx) == len(smi.split(test_pool._splitter)) for idx, smi in zip(
-            sample_df[test_pool._sample_reactant_idx_col], sample_df[test_pool._sample_reactant_smiles_col])
-    ])
+    assert all(
+        len(idx) == len(smi.split(test_pool._splitter))
+        for idx, smi in zip(
+            sample_df[test_pool._sample_reactant_idx_col],
+            sample_df[test_pool._sample_reactant_smiles_col],
+        )
+    )
 
 
 def test_reactant2product():
@@ -222,8 +224,12 @@ def test_proposal():
 
     assert len(old_df) == len(new_df)
     assert list(old_df) == list(new_df)
-    assert all([
+    assert all(
         oidx != nidx
-        for oidx, nidx in zip(old_df[test_pool._sample_reactant_idx_col], new_df[test_pool._sample_reactant_idx_col])
-    ])
+        for oidx, nidx in zip(
+            old_df[test_pool._sample_reactant_idx_col],
+            new_df[test_pool._sample_reactant_idx_col],
+        )
+    )
+
     assert not new_df.isnull().values.any()

@@ -11,21 +11,21 @@ import pandas as pd
 class ReactantNotInPoolError(ProposalError):
 
     def __init__(self, r_id):
-        super().__init__("reactant id {} is not in the reactant pool".format(r_id))
+        super().__init__(f"reactant id {r_id} is not in the reactant pool")
 
 
 class NotSquareError(ProposalError):
 
     def __init__(self, n_row=0, n_col=0):
-        super().__init__("dataframe of shape {} * {} is not square".format(n_row, n_col))
+        super().__init__(f"dataframe of shape {n_row} * {n_col} is not square")
 
 
 class SimPoolnotmatchError(ProposalError):
 
     def __init__(self, n_pool=0, n_sim=0):
         super().__init__(
-            "reactant pool with length {} dose not match the size of similarity matrix of size {} * {}"
-            .format(n_pool, n_sim, n_sim))
+            f"reactant pool with length {n_pool} dose not match the size of similarity matrix of size {n_sim} * {n_sim}"
+        )
 
 
 class NoSampleError(ProposalError):
@@ -126,12 +126,15 @@ class ReactantPool(BaseProposal):
             raise ReactantNotInPoolError(r_idx_old)
         sim_col = self._sim_df[[r_idx_old]].drop(r_idx_old)
         sim_col = sim_col.loc[sim_col[r_idx_old] != 0]
-        if len(sim_col) > 0:
-            r_idx_new = random.choices(population=sim_col.index, weights=sim_col[r_idx_old], k=1)[0]
-        else:
-            r_idx_new = random.choices(population=self._sim_df[[r_idx_old]].drop(r_idx_old).index,
-                                       k=1)[0]
-        return r_idx_new
+        return (
+            random.choices(
+                population=sim_col.index, weights=sim_col[r_idx_old], k=1
+            )[0]
+            if len(sim_col) > 0
+            else random.choices(
+                population=self._sim_df[[r_idx_old]].drop(r_idx_old).index, k=1
+            )[0]
+        )
 
     def single_proposal(self, reactant):
         """

@@ -100,14 +100,13 @@ class BaseRunner(BaseEstimator, metaclass=TimedMetaClass):
     @staticmethod
     def check_device(cuda: Union[bool, str, torch.device]) -> torch.device:
         if isinstance(cuda, bool):
-            if cuda:
-                if torch.cuda.is_available():
-                    return torch.device('cuda')
-                else:
-                    raise RuntimeError('could not use CUDA on this machine')
-            else:
+            if not cuda:
                 return torch.device('cpu')
 
+            if torch.cuda.is_available():
+                return torch.device('cuda')
+            else:
+                raise RuntimeError('could not use CUDA on this machine')
         if isinstance(cuda, str):
             if 'cuda' in cuda:
                 if torch.cuda.is_available():
@@ -133,9 +132,9 @@ class BaseRunner(BaseEstimator, metaclass=TimedMetaClass):
         self._device = self.check_device(v)
 
     def _make_inject(self, injects, kwargs):
-        _kwargs = {k: self._extensions[k][0] for k in injects if k in self._extensions}
-        _kwargs.update({k: kwargs[k] for k in injects if k in kwargs})
-        return _kwargs
+        return {
+            k: self._extensions[k][0] for k in injects if k in self._extensions
+        } | {k: kwargs[k] for k in injects if k in kwargs}
 
     def input_proc(self, x_in, y_in=None, **kwargs):
         for (ext, injects) in self._extensions.values():
@@ -196,7 +195,7 @@ class BaseRunner(BaseEstimator, metaclass=TimedMetaClass):
                 'before_proc', 'input_proc', 'step_forward', 'output_proc', 'after_proc', 'on_reset', 'on_checkpoint'
             ]
             dependencies = [_get_keyword_params(getattr(ext, m)) for m in methods]
-            dependency_inject = {k: v for k, v in zip(methods, dependencies)}
+            dependency_inject = dict(zip(methods, dependencies))
 
             self._extensions[name] = (ext, dependency_inject)
 

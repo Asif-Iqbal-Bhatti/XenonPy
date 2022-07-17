@@ -182,21 +182,15 @@ def test_cv_3(data):
 
 def test_cv_4(data):
     sp = Splitter(10, test_size=0, k_fold=5, random_state=123456)
-    tmp = []
-    for _, x_ in sp.cv():
-        tmp.append(x_)
+    tmp = [x_ for _, x_ in sp.cv()]
     tmp = np.concatenate(tmp)
 
-    tmp_ = []
-    for _, x_ in sp.cv():
-        tmp_.append(x_)
+    tmp_ = [x_ for _, x_ in sp.cv()]
     tmp_ = np.concatenate(tmp_)
     assert np.array_equal(tmp, tmp_)
 
-    tmp_ = []
     sp.roll()
-    for _, x_ in sp.cv():
-        tmp_.append(x_)
+    tmp_ = [x_ for _, x_ in sp.cv()]
     tmp_ = np.concatenate(tmp_)
     assert not np.array_equal(tmp, tmp_)
 

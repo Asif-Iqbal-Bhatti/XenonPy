@@ -44,8 +44,13 @@ class LinearLayer(nn.Module):
         super().__init__()
         self.linear = nn.Linear(in_features, out_features, bias)
         self.dropout = nn.Dropout(dropout)
-        self.normalizer = None if not normalizer else nn.BatchNorm1d(out_features, momentum=normalizer)
-        self.activation = None if not activation_func else activation_func
+        self.normalizer = (
+            nn.BatchNorm1d(out_features, momentum=normalizer)
+            if normalizer
+            else None
+        )
+
+        self.activation = activation_func or None
 
     def forward(self, x):
         _out = self.linear(x)
@@ -106,7 +111,7 @@ class SequentialLinear(nn.Module):
         if self._h_layers > 0:
             if isinstance(h_neurons[0], float):
                 tmp = [in_features]
-                for i, ratio in enumerate(h_neurons):
+                for ratio in h_neurons:
                     num = math.ceil(in_features * ratio)
                     tmp.append(num)
                 neurons = tuple(tmp)
@@ -136,13 +141,12 @@ class SequentialLinear(nn.Module):
             self.output = nn.Linear(in_features, out_features, bias)
 
     def _check_input(self, i):
-        if isinstance(i, Sequence):
-            if len(i) != self._h_layers:
-                raise RuntimeError(f'number of parameter not consistent with number of layers, '
-                                   f'input is {len(i)} but need to be {self._h_layers}')
-            return tuple(i)
-        else:
+        if not isinstance(i, Sequence):
             return tuple([i] * self._h_layers)
+        if len(i) != self._h_layers:
+            raise RuntimeError(f'number of parameter not consistent with number of layers, '
+                               f'input is {len(i)} but need to be {self._h_layers}')
+        return tuple(i)
 
     def forward(self, x: Any) -> Any:
         for i in range(self._h_layers):

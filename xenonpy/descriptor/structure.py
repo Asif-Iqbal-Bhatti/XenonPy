@@ -246,11 +246,7 @@ class OrbitalFieldMatrix(BaseFeaturizer):
                 site_x_label = site_x.species_string
                 neigh_vector = self.get_element_representation(site_x_label)
                 d = np.sqrt(np.sum((site.coords - site_x.coords)**2))
-                if self._including_d:
-                    env_vector += neigh_vector * w / d
-                else:
-                    env_vector += neigh_vector * w
-
+                env_vector += neigh_vector * w / d if self._including_d else neigh_vector * w
             local_matrix = center_vector[None, :] * env_vector[:, None]
             local_matrix = np.ravel(local_matrix)
             local_orbital_field_matrices.append(local_matrix)
@@ -264,7 +260,7 @@ class OrbitalFieldMatrix(BaseFeaturizer):
             'f1', 'f2', 'f3', 'f4', 'f5', 'f6', 'f7', 'f8', 'f9', 'f10', 'f11', 'f12', 'f13', 'f14'
         ])
 
-        return [i + '_' + j for i in labels for j in labels]
+        return [f'{i}_{j}' for i in labels for j in labels]
 
 
 class Structures(BaseDescriptor):

@@ -17,6 +17,8 @@ def data():
     warnings.filterwarnings("ignore", message="numpy.dtype size changed")
     warnings.filterwarnings("ignore", message="numpy.ndarray size changed")
 
+
+
     class Ext1(BaseExtension):
         def __init__(self):
             super().__init__()
@@ -33,12 +35,13 @@ def data():
             step_info['ext1'] = 'ext1'
 
         def input_proc(self, x_in, y_in, **_):
-            if y_in is None:
-                return x_in * 10, y_in
-            return x_in * 10, y_in * 10
+            return (x_in * 10, y_in) if y_in is None else (x_in * 10, y_in * 10)
 
         def output_proc(self, y_pred, y_true, **_):
             return y_pred * 10, y_true
+
+
+
 
     class Ext2(BaseExtension):
         def __init__(self):
@@ -47,22 +50,21 @@ def data():
             self.after = None
 
         def before_proc(self, ext1) -> None:
-            self.before = ext1.before + '_ext2'
+            self.before = f'{ext1.before}_ext2'
 
         def after_proc(self, ext1) -> None:
-            self.after = ext1.after + '_ext2'
+            self.after = f'{ext1.after}_ext2'
 
         def step_forward(self, step_info: OrderedDict, non_exist='you can not see me!') -> None:
             step_info['ext2'] = step_info['ext1'] + '_ext2'
             step_info['non_exist'] = non_exist
 
         def input_proc(self, x_in, y_in=None, **_):
-            if y_in is None:
-                return x_in * 2, y_in
-            return x_in * 2, y_in * 2
+            return (x_in * 2, y_in) if y_in is None else (x_in * 2, y_in * 2)
 
         def output_proc(self, y_pred, y_true=None, **_):
             return y_pred * 2, y_true
+
 
     yield Ext1, Ext2
     print('test over')

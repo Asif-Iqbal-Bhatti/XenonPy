@@ -55,15 +55,8 @@ class TensorConverter(BaseExtension):
         self.empty_cache = empty_cache
         self.probability = probability
         self.auto_reshape = auto_reshape
-        if x_dtype is None:
-            self._x_dtype = torch.get_default_dtype()
-        else:
-            self._x_dtype = x_dtype
-
-        if y_dtype is None:
-            self._y_dtype = torch.get_default_dtype()
-        else:
-            self._y_dtype = y_dtype
+        self._x_dtype = torch.get_default_dtype() if x_dtype is None else x_dtype
+        self._y_dtype = torch.get_default_dtype() if y_dtype is None else y_dtype
 
     @property
     def argmax(self):
@@ -98,14 +91,10 @@ class TensorConverter(BaseExtension):
         self._probability = value
 
     def _get_x_dtype(self, i=0):
-        if isinstance(self._x_dtype, tuple):
-            return self._x_dtype[i]
-        return self._x_dtype
+        return self._x_dtype[i] if isinstance(self._x_dtype, tuple) else self._x_dtype
 
     def _get_y_dtype(self, i=0):
-        if isinstance(self._y_dtype, tuple):
-            return self._y_dtype[i]
-        return self._y_dtype
+        return self._y_dtype[i] if isinstance(self._y_dtype, tuple) else self._y_dtype
 
     def input_proc(self, x_in: Union[Sequence[Union[torch.Tensor, pd.DataFrame, pd.Series, np.ndarray, Any]],
                                      torch.Tensor, pd.DataFrame, pd.Series, np.ndarray, Any],
@@ -148,12 +137,12 @@ class TensorConverter(BaseExtension):
             return t.to(trainer.device, non_blocking=trainer.non_blocking)
 
         if isinstance(x_in, Sequence):
-            x_in = tuple([_convert(t, self._get_x_dtype(i)) for i, t in enumerate(x_in)])
+            x_in = tuple(_convert(t, self._get_x_dtype(i)) for i, t in enumerate(x_in))
         else:
             x_in = _convert(x_in, self._get_x_dtype())
 
         if isinstance(y_in, Sequence):
-            y_in = tuple([_convert(t, self._get_y_dtype(i)) for i, t in enumerate(y_in)])
+            y_in = tuple(_convert(t, self._get_y_dtype(i)) for i, t in enumerate(y_in))
         else:
             y_in = _convert(y_in, self._get_y_dtype())
 
@@ -188,13 +177,14 @@ class TensorConverter(BaseExtension):
                 y_ = y_.detach().cpu().numpy()
             if argmax_:
                 return np.argmax(y_, 1)
-            if proba_:
-                return softmax(y_, axis=1)
-            return y_
+            return softmax(y_, axis=1) if proba_ else y_
 
         if not is_training:
             if isinstance(y_pred, tuple):
-                return tuple([_convert(t, self._argmax, self._probability) for t in y_pred]), _convert(y_true)
+                return tuple(
+                    _convert(t, self._argmax, self._probability) for t in y_pred
+                ), _convert(y_true)
+
             else:
                 return _convert(y_pred, self._argmax, self._probability), _convert(y_true)
         else:

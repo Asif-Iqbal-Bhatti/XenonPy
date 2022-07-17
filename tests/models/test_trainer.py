@@ -219,7 +219,7 @@ def test_trainer_fit_3(data):
     trainer.reset()
     trainer.fit(*data[1], checkpoint=lambda i: (True, f'new:{i}'))
     assert len(trainer.get_checkpoint()) == 5
-    assert trainer.get_checkpoint() == list([f'new:{i + 1}' for i in range(5)])
+    assert trainer.get_checkpoint() == [f'new:{i + 1}' for i in range(5)]
 
 
 def test_trainer_fit_4(data):
@@ -231,26 +231,21 @@ def test_trainer_fit_4(data):
                       lr_scheduler=ReduceLROnPlateau(),
                       epochs=10)
 
-    count = 1
-    for i in trainer(*data[1]):
+    for count, i in enumerate(trainer(*data[1]), start=1):
         assert isinstance(i, dict)
         assert i['i_epoch'] == count
         if count == 3:
             trainer.early_stop('stop')
-        count += 1
-
     assert trainer.total_epochs == 3
     assert trainer._early_stopping == (True, 'stop')
 
     trainer.reset()
     train_set = DataLoader(TensorDataset(*data[1]))
-    count = 1
-    for i in trainer(training_dataset=train_set):
+    for count, i in enumerate(trainer(training_dataset=train_set), start=1):
         assert isinstance(i, dict)
         assert i['i_batch'] == count
         if count == 3:
             trainer.early_stop('stop!!!')
-        count += 1
     assert trainer.total_iterations == 3
     assert trainer._early_stopping == (True, 'stop!!!')
 

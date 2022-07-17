@@ -159,16 +159,8 @@ class Splitter(BaseEstimator):
 
         for train, val in self._cv_indices:
             if less_for_train:
-                tmp = train
-                train = val
-                val = tmp
-
-            if len(arrays) == 0:
-                if self._test is not None:
-                    yield train, val, self._test
-                else:
-                    yield train, val
-            else:
+                train, val = val, train
+            if arrays:
                 ret = []
                 for array in arrays:
                     array = self._check_input(array)
@@ -177,6 +169,10 @@ class Splitter(BaseEstimator):
                     else:
                         ret.extend(self._split(array, train, val))
                 yield tuple(ret)
+            elif self._test is not None:
+                yield train, val, self._test
+            else:
+                yield train, val
         return
 
     def split(self, *arrays: Union[np.ndarray, pd.DataFrame, pd.Series]):
@@ -200,7 +196,7 @@ class Splitter(BaseEstimator):
         if self._test is None:
             raise RuntimeError('split action is illegal because `test_size` is none')
 
-        if len(arrays) == 0:
+        if not arrays:
             return self._train, self._test
 
         ret = []

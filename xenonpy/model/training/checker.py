@@ -47,9 +47,7 @@ class Checker(object):
         """
         if path is None:
             path = Path().cwd().name
-            self._path = Path.cwd() / path
-        else:
-            self._path = Path.cwd() / path
+        self._path = Path.cwd() / path
         if increment:
             i = 1
             while Path(f'{path}@{i}').exists():
@@ -89,8 +87,7 @@ class Checker(object):
 
     @property
     def model_structure(self):
-        structure = self['model_structure']
-        return structure
+        return self['model_structure']
 
     @property
     def training_info(self):
@@ -117,22 +114,20 @@ class Checker(object):
         model: :class:`torch.nn.Module`
             A pytorch model.
         """
-        if (self._path / 'model.pth.m').exists():
-            model = torch.load(str(self._path / 'model.pth.m'), map_location=self._device)
-            state = self.final_state
+        if not (self._path / 'model.pth.m').exists():
+            return None
+        model = torch.load(str(self._path / 'model.pth.m'), map_location=self._device)
+        state = self.final_state
 
-            if state is not None:
-                try:
-                    model.load_state_dict(state)
-                except torch.nn.modules.module.ModuleAttributeError:
-                    # pytorch 1.6.0 compatability
-                    for _, m in model.named_modules():
-                        m._non_persistent_buffers_set = set()
-                    model.load_state_dict(state)
-                return model
-            else:
-                return model
-        return None
+        if state is not None:
+            try:
+                model.load_state_dict(state)
+            except torch.nn.modules.module.ModuleAttributeError:
+                # pytorch 1.6.0 compatability
+                for _, m in model.named_modules():
+                    m._non_persistent_buffers_set = set()
+                model.load_state_dict(state)
+        return model
 
     @model.setter
     def model(self, model: Module):
@@ -156,12 +151,11 @@ class Checker(object):
     def trained_model(self):
         if (self._path / 'trained_model.@1.pkl.z').exists():
             return torch.load(str(self._path / 'trained_model.@1.pkl.z'), map_location=self._device)
-        else:
-            tmp = self.final_state
-            if tmp is not None:
-                model: torch.nn.Module = self.model
-                model.load_state_dict(tmp)
-                return model
+        tmp = self.final_state
+        if tmp is not None:
+            model: torch.nn.Module = self.model
+            model.load_state_dict(tmp)
+            return model
         return None
 
     @property
@@ -215,11 +209,11 @@ class Checker(object):
 
     def _save_data(self, data: Any, filename: str, handle) -> str:
         if isinstance(data, pd.DataFrame):
-            file = str(self._path / (filename + '.pd.xz'))
+            file = str(self._path / f'{filename}.pd.xz')
             self._files[filename] = file
             pd.to_pickle(data, file)
         elif isinstance(data, (torch.Tensor, torch.nn.Module)):
-            file = str(self._path / (filename + '.pth.m'))
+            file = str(self._path / f'{filename}.pth.m')
             self._files[filename] = file
             torch.save(data, file)
         else:
@@ -241,10 +235,7 @@ class Checker(object):
             return pd.read_pickle(fp)
         if patten == 'pth':
             return torch.load(fp, map_location=self._device)
-        if patten == 'pkl':
-            return joblib.load(fp)
-        else:
-            return handle.load(fp)
+        return joblib.load(fp) if patten == 'pkl' else handle.load(fp)
 
     def __getattr__(self, name: str):
         """
@@ -295,9 +286,7 @@ class Checker(object):
         self.checkpoints((Checker.__SL, '.pth.s'), **kwargs)
 
     def __repr__(self):
-        cont_ls = ['<{}> includes:'.format(self.__class__.__name__)]
+        cont_ls = [f'<{self.__class__.__name__}> includes:']
 
-        for k, v in self._files.items():
-            cont_ls.append('"{}": {}'.format(k, v))
-
+        cont_ls.extend(f'"{k}": {v}' for k, v in self._files.items())
         return '\n'.join(cont_ls)

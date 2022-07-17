@@ -82,7 +82,7 @@ class IQSPR_VF(BaseSMC):
         # rearrange base SMILES to avoid 1st char = '*'
         if len(idx_base) == 1 and idx_base[0] == 0:
             smis_base_head = Chem.MolToSmiles(mols_base,rootedAtAtom=1)
-        elif len(idx_base) == 0:
+        elif not idx_base:
             smis_base_head = smis_base + '*'
         else:
             smis_base_head = smis_base
@@ -91,25 +91,24 @@ class IQSPR_VF(BaseSMC):
         esmi_base = ngram.smi2esmi(smis_base_head)
         esmi_base = esmi_base[:-1]
         idx_base = esmi_base.index[esmi_base['esmi'] == '*'].tolist()
-        if idx_base[0] == 0:
-            idx_base = idx_base[1]
-        else:
-            idx_base = idx_base[0]
-
+        idx_base = idx_base[1] if idx_base[0] == 0 else idx_base[0]
         # rearrange fragment to have 1st char = '*' and convert to ext. SMILES
         mols_frag = Chem.MolFromSmiles(smis_frag)
         if mols_frag is None:
             raise RuntimeError('Invalid frag SMILES!')
-        idx_frag = [i for i in range(mols_frag.GetNumAtoms()) if mols_frag.GetAtomWithIdx(i).GetSymbol() == '*']
-        if len(idx_frag) == 0:
-            esmi_frag = ngram.smi2esmi(smis_frag)
-            # remove last '!'
-            esmi_frag = esmi_frag[:-1]
-        else:
+        if idx_frag := [
+            i
+            for i in range(mols_frag.GetNumAtoms())
+            if mols_frag.GetAtomWithIdx(i).GetSymbol() == '*'
+        ]:
             esmi_frag = ngram.smi2esmi(Chem.MolToSmiles(mols_frag,rootedAtAtom=idx_frag[0]))
             # remove leading '*' and last '!'
             esmi_frag = esmi_frag[1:-1]
 
+        else:
+            esmi_frag = ngram.smi2esmi(smis_frag)
+            # remove last '!'
+            esmi_frag = esmi_frag[:-1]
         # check open rings of base SMILES
         nRing_base = esmi_base['n_ring'].loc[idx_base]
 
@@ -168,7 +167,7 @@ class IQSPR_VF(BaseSMC):
         elif len(samples) < size:
 #             samples = samples + np.random.choice(reservoir,size=size-len(samples)).tolist()
             samples = np.concatenate([np.array(samples), np.random.choice(reservoir,size=size-len(samples))])
-            
+
         res_size = int(size*ratio)
         smc_size = size - res_size
 

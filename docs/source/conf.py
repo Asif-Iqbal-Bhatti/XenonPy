@@ -208,9 +208,7 @@ nbsphinx_execute = 'never'
 
 
 def skip(app, what, name, obj, skip, options):
-    if name == "__call__":
-        return False
-    return skip
+    return False if name == "__call__" else skip
 
 
 def setup(app):

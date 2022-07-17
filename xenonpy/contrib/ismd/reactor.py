@@ -22,7 +22,7 @@ except ImportError as e:
 class SMILESInvalidError(Exception):
 
     def __init__(self, smi):
-        super().__init__("SMILES {} is not tokenizable.".format(smi))
+        super().__init__(f"SMILES {smi} is not tokenizable.")
 
 
 def smi_tokenizer(smi) -> str:
@@ -41,7 +41,7 @@ def smi_tokenizer(smi) -> str:
     import re
     pattern = "(\[[^\]]+]|Br?|Cl?|N|O|S|P|F|I|b|c|n|o|s|p|\(|\)|\.|=|#|-|\+|\\\\|\/|:|~|@|\?|>|\*|\$|\%[0-9]{2}|[0-9])"
     regex = re.compile(pattern)
-    tokens = [token for token in regex.findall(smi)]
+    tokens = list(regex.findall(smi))
     if smi != ''.join(tokens):
         raise SMILESInvalidError(smi)
     return ' '.join(tokens)

@@ -84,7 +84,7 @@ class FrozenFeaturizer(BaseFeaturizer):
             for m in self.model[:-1]:
                 hlayers.append(m.layer(x_).data)
                 x_ = m(x_)
-        
+
         # get predefined values when depth/n_layer is not given initially
         if depth is None:
             depth = self.depth
@@ -101,22 +101,15 @@ class FrozenFeaturizer(BaseFeaturizer):
         else:
             self._depth = depth
 
-        if n_layer is None:
-            l_end = 0
-        else:
-            l_end = n_layer-self._depth
-
+        l_end = 0 if n_layer is None else n_layer-self._depth
         if l_end > -1:
             if l_end > 0:
                 warnings.warn('<n_layer> is over the max depth of hidden layers starting at the given <depth>')
             ret = hlayers[-self._depth:]
         else:
             ret = hlayers[-self._depth:l_end]
-        
-        if self.cuda:
-            ret = [l.cpu().numpy() for l in ret]
-        else:
-            ret = [l.numpy() for l in ret]
+
+        ret = [l.cpu().numpy() for l in ret] if self.cuda else [l.numpy() for l in ret]
         self._ret = ret
         return np.concatenate(ret, axis=1)
 
@@ -124,6 +117,8 @@ class FrozenFeaturizer(BaseFeaturizer):
     def feature_labels(self):
         if self._depth == 0:
             raise ValueError('Can not generate labels before transform.')
-        return ['L(' + str(i - self._depth) + ')_' + str(j + 1)
-                for i in range(len(self._ret))
-                for j in range(self._ret[i].shape[1])]
+        return [
+            f'L({str(i - self._depth)})_{str(j + 1)}'
+            for i in range(len(self._ret))
+            for j in range(self._ret[i].shape[1])
+        ]

@@ -82,7 +82,7 @@ class IQSPR_V(BaseSMC):
         # refill samples if len(samples) not equals given size
         elif len(samples) < size:
             samples = np.concatenate([np.array(samples), np.random.choice(reservoir,size=size-len(samples))])
-            
+
         res_size = int(size*ratio)
         smc_size = size - res_size
 

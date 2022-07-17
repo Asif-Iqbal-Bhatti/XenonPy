@@ -10,16 +10,13 @@ from numpy import product
 class Product(object):
     def __init__(self, *paras, repeat=1):
         if not isinstance(repeat, int):
-            raise ValueError('repeat must be int but got {}'.format(
-                type(repeat)))
+            raise ValueError(f'repeat must be int but got {type(repeat)}')
         lens = [len(p) for p in paras]
         if repeat > 1:
-            lens = lens * repeat
+            lens *= repeat
         size = product(lens)
         acc_list = [np.floor_divide(size, lens[0])]
-        for len_ in lens[1:]:
-            acc_list.append(np.floor_divide(acc_list[-1], len_))
-
+        acc_list.extend(np.floor_divide(acc_list[-1], len_) for len_ in lens[1:])
         self.paras = paras * repeat if repeat > 1 else paras
         self.lens = lens
         self.size = size

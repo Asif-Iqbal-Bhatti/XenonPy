@@ -27,7 +27,7 @@ class ParameterGenerator(object):
         kwargs
             Parameter candidate.
         """
-        if len(kwargs) == 0:
+        if not kwargs:
             raise RuntimeError('need parameter candidate')
 
         np.random.seed(seed)
@@ -58,21 +58,14 @@ class ParameterGenerator(object):
 
     def __call__(self, num: int, *, factory=None):
         for _ in range(num):
-            tmp = {}
-            for k, v in self.tuples.items():
-                tmp[k] = self._gen(v)
-
+            tmp = {k: self._gen(v) for k, v in self.tuples.items()}
             for k, v in self.funcs.items():
                 tmp[k] = v()
 
             for k, v in reversed(self.dicts.items()):
                 data = v['data']
                 repeat = v['repeat']
-                if 'replace' in v:
-                    replace = v['replace']
-                else:
-                    replace = True
-
+                replace = v['replace'] if 'replace' in v else True
                 if isinstance(repeat, (tuple, list, np.ndarray, pd.Series)):
                     repeat = self._gen(repeat)
                 elif isinstance(repeat, str):
@@ -93,7 +86,7 @@ class ParameterGenerator(object):
     def _gen(item: Sequence, repeat: int = None, replace: bool = True):
         if repeat is not None:
             idx = np.random.choice(len(item), repeat, replace=replace)
-            return tuple([item[i] for i in idx])
+            return tuple(item[i] for i in idx)
         else:
             idx = np.random.choice(len(item))
             return item[idx]
