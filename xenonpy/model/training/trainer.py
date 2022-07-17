@@ -169,7 +169,9 @@ class Trainer(BaseRunner):
             if isinstance(model, torch.nn.Module):
                 self.reset(to=model)
             else:
-                raise TypeError('parameter `m` must be a instance of <torch.nn.modules> but got %s' % type(model))
+                raise TypeError(
+                    f'parameter `m` must be a instance of <torch.nn.modules> but got {type(model)}'
+                )
 
     @property
     def optimizer(self):
@@ -333,8 +335,7 @@ class Trainer(BaseRunner):
                               epochs=epochs,
                               checkpoint=checkpoint,
                               **model_params):
-                    delta = self._total_epochs - prob
-                    if delta:
+                    if delta := self._total_epochs - prob:
                         prob = self._total_epochs
                         pbar.update(delta)
         else:
@@ -449,16 +450,19 @@ class Trainer(BaseRunner):
             return step_info
 
         def _snapshot():
-            if checkpoint is not None:
-                if isinstance(checkpoint, bool) and checkpoint:
-                    self.set_checkpoint()
-                if isinstance(checkpoint, int):
-                    if self._total_epochs % checkpoint == 0:
-                        self.set_checkpoint()
-                if callable(checkpoint):
-                    flag, msg = checkpoint(self._total_epochs)
-                    if flag:
-                        self.set_checkpoint(msg)
+            if checkpoint is None:
+                return
+            if isinstance(checkpoint, bool) and checkpoint:
+                self.set_checkpoint()
+            if (
+                isinstance(checkpoint, int)
+                and self._total_epochs % checkpoint == 0
+            ):
+                self.set_checkpoint()
+            if callable(checkpoint):
+                flag, msg = checkpoint(self._total_epochs)
+                if flag:
+                    self.set_checkpoint(msg)
 
         if validation_dataset is not None:
             if y_val is not None or x_val is not None:
@@ -571,10 +575,7 @@ class Trainer(BaseRunner):
         -------
 
         """
-        if isinstance(checker, (str, Path)):
-            checker = Checker(checker)
-        else:
-            checker = checker
+        checker = Checker(checker) if isinstance(checker, (str, Path)) else checker
         if len(checker.files) == 0:
             raise RuntimeError(f'{checker.path} is not a model dir')
 
@@ -640,9 +641,7 @@ class Trainer(BaseRunner):
         def _vstack(ls):
             if isinstance(ls[0], np.ndarray):
                 return np.concatenate(ls)
-            if isinstance(ls[0], torch.Tensor):
-                return torch.cat(ls, dim=0)
-            return ls
+            return torch.cat(ls, dim=0) if isinstance(ls[0], torch.Tensor) else ls
 
         # maker sure eval mode
         self._model.eval()
@@ -657,9 +656,7 @@ class Trainer(BaseRunner):
             return _vstack(y_preds), _vstack(y_trues)
         elif x_in is not None and dataset is None:
             y_preds, y_trues = _predict(x_in, y_true)
-            if y_trues is None:
-                return y_preds
-            return y_preds, y_trues
+            return y_preds if y_trues is None else (y_preds, y_trues)
         else:
             raise RuntimeError('parameters <x_in> and <dataset> are mutually exclusive')
 

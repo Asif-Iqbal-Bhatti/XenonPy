@@ -64,11 +64,7 @@ class Counting(BaseCompositionFeaturizer):
     def mix_function(self, elems, nums):
         vec = np.zeros(len(self._elems), dtype=np.int)
         for i, e in enumerate(elems):
-            if self.one_hot_vec:
-                vec[self._elems.index(e)] = 1
-            else:
-                vec[self._elems.index(e)] = nums[i]
-
+            vec[self._elems.index(e)] = 1 if self.one_hot_vec else nums[i]
         return vec
 
     @property

@@ -39,8 +39,8 @@ class Layer1d(nn.Module):
         """
         super().__init__()
         self.layer = layer_func(n_in, n_out)
-        self.batch_nor = None if not batch_nor else batch_nor(n_out)
-        self.act_func = None if not act_func else act_func
+        self.batch_nor = batch_nor(n_out) if batch_nor else None
+        self.act_func = act_func or None
         self.dropout = None if drop_out == 0. else nn.Dropout(drop_out)
 
     def forward(self, *x):

@@ -46,7 +46,7 @@ class PackageInfo(object):
             str-list
         """
         try:
-            require = list()
+            require = []
             f = open(filename, "rb")
             for line in f.read().decode("utf-8").split("\n"):
                 line = line.strip()
@@ -55,8 +55,8 @@ class PackageInfo(object):
                 if line:
                     require.append(line)
         except IOError:
-            print("'{}' not found!".format(filename))
-            require = list()
+            print(f"'{filename}' not found!")
+            require = []
 
         return require
 
@@ -124,7 +124,7 @@ if __name__ == "__main__":
     # Project Url
     GITHUB_URL = "https://github.com/{0}/{1}".format(GITHUB_USERNAME, PKG_NAME)
     # Use todays date as GitHub release tag
-    RELEASE_TAG = 'v' + VERSION
+    RELEASE_TAG = f'v{VERSION}'
     # Source code download url
     DOWNLOAD_URL = "https://github.com/{0}/{1}/archive/{2}.tar.gz".format(GITHUB_USERNAME, PKG_NAME, RELEASE_TAG)
 

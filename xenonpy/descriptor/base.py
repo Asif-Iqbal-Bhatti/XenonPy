@@ -169,12 +169,8 @@ class BaseFeaturizer(BaseEstimator, TransformerMixin, metaclass=ABCMeta):
     @n_jobs.setter
     def n_jobs(self, n_jobs):
         """Set the number of threads for this """
-        if n_jobs < -1:
-            n_jobs = -1
-        if n_jobs > cpu_count() or n_jobs == -1:
-            self._n_jobs = cpu_count()
-        else:
-            self._n_jobs = n_jobs
+        n_jobs = max(n_jobs, -1)
+        self._n_jobs = cpu_count() if n_jobs > cpu_count() or n_jobs == -1 else n_jobs
 
     def fit(self, X, y=None, **fit_kwargs):
         """Update the parameters of this featurizer based on available data
@@ -261,8 +257,8 @@ class BaseFeaturizer(BaseEstimator, TransformerMixin, metaclass=ABCMeta):
         if isinstance(entries, pd.DataFrame):
             if target_col is None:
                 target_col = self.target_col
-                if target_col is None:
-                    target_col = entries.columns.values
+            if target_col is None:
+                target_col = entries.columns.values
             entries = entries[target_col]
 
         # Special case: Empty list
@@ -298,12 +294,8 @@ class BaseFeaturizer(BaseEstimator, TransformerMixin, metaclass=ABCMeta):
 
         if return_type == 'any':
             if isinstance(entries, (pd.Series, pd.DataFrame)):
-                tmp = pd.DataFrame(ret, index=entries.index, columns=labels)
-                return tmp
-            if isinstance(entries, np.ndarray):
-                return np.array(ret)
-            return ret
-
+                return pd.DataFrame(ret, index=entries.index, columns=labels)
+            return np.array(ret) if isinstance(entries, np.ndarray) else ret
         if return_type == 'array':
             return np.array(ret)
 
@@ -327,14 +319,17 @@ class BaseFeaturizer(BaseEstimator, TransformerMixin, metaclass=ABCMeta):
         """
         try:
             # Successful featurization returns nan for an error.
-            if not isinstance(x, (tuple, list, np.ndarray)):
-                return self.featurize(x, **self._kwargs)
-            return self.featurize(*x, **self._kwargs)
+            return (
+                self.featurize(*x, **self._kwargs)
+                if isinstance(x, (tuple, list, np.ndarray))
+                else self.featurize(x, **self._kwargs)
+            )
+
         except Exception as e:
-            if self._on_errors == 'nan':
-                return [np.nan] * len(self.feature_labels)
-            elif self._on_errors == 'keep':
+            if self._on_errors == 'keep':
                 return [e] * len(self.feature_labels)
+            elif self._on_errors == 'nan':
+                return [np.nan] * len(self.feature_labels)
             else:
                 raise e
 
@@ -452,10 +447,7 @@ class BaseDescriptor(BaseEstimator, TransformerMixin, metaclass=TimedMetaClass):
     @featurizers.setter
     def featurizers(self, val):
         if isinstance(val, str):
-            if val != 'all':
-                self._featurizers = (val,)
-            else:
-                self._featurizers = val
+            self._featurizers = (val, ) if val != 'all' else val
         elif isinstance(val, (tuple, List)):
             self._featurizers = tuple(val)
         else:
@@ -473,7 +465,7 @@ class BaseDescriptor(BaseEstimator, TransformerMixin, metaclass=TimedMetaClass):
             super().__setattr__(key, value)
         if isinstance(value, BaseFeaturizer):
             if value.__class__.__name__ in self.__featurizers__:
-                raise RuntimeError('Duplicated featurizer <%s>' % value.__class__.__name__)
+                raise RuntimeError(f'Duplicated featurizer <{value.__class__.__name__}>')
             self.__featurizer_sets__[key].append(value)
             self.__featurizers__.add(value.__class__.__name__)
         else:
@@ -496,9 +488,8 @@ class BaseDescriptor(BaseEstimator, TransformerMixin, metaclass=TimedMetaClass):
                 if isinstance(x, list):
                     return pd.DataFrame(pd.Series(x), columns=keys)
 
-                if isinstance(x, np.ndarray):
-                    if len(x.shape) == 1:
-                        return pd.DataFrame(x, columns=keys)
+                if isinstance(x, np.ndarray) and len(x.shape) == 1:
+                    return pd.DataFrame(x, columns=keys)
 
                 if isinstance(x, pd.Series):
                     return pd.DataFrame(x.values, columns=keys, index=x.index)
@@ -612,9 +603,7 @@ class BaseDescriptor(BaseEstimator, TransformerMixin, metaclass=TimedMetaClass):
         for k, features in self.__featurizer_sets__.items():
             ret += ((k, list(itertools.chain.from_iterable([f.feature_labels for f in features]))),)
 
-        if len(ret) == 1:
-            return ret[0][1]
-        return ret
+        return ret[0][1] if len(ret) == 1 else ret
 
 
 class BaseCompositionFeaturizer(BaseFeaturizer, metaclass=ABCMeta):

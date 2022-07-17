@@ -36,7 +36,7 @@ def set_env(**kwargs):
     """
     import os
 
-    tmp = dict()
+    tmp = {}
     for k, v in kwargs.items():
         tmp[k] = os.getenv(k)
         os.environ[k] = v
@@ -84,7 +84,7 @@ def config(key=None, **key_vals):
                 conf_ = yaml.load(f)
 
             if key not in conf_:
-                raise RuntimeError('No item(s) named %s in configurations' % key)
+                raise RuntimeError(f'No item(s) named {key} in configurations')
 
             value = conf_[key]
 
@@ -129,7 +129,7 @@ def get_data_loc(name):
 
     scheme = ('userdata', 'usermodel')
     if name not in scheme:
-        raise ValueError('{} not in {}'.format(name, scheme))
+        raise ValueError(f'{name} not in {scheme}')
     if getenv(name):
         return str(Path(getenv(name)).expanduser())
     return str(Path(config(name)).expanduser())

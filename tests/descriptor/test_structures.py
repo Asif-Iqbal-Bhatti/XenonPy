@@ -24,25 +24,20 @@ def data():
     warnings.filterwarnings("ignore", message="numpy.dtype size changed")
     warnings.filterwarnings("ignore", message="numpy.ndarray size changed")
 
-    cifs = pd.Series([cif1, cif2], name='structure')
-    yield cifs
-
+    yield pd.Series([cif1, cif2], name='structure')
     print('test over')
 
 
 def test_rdf(data):
     RadialDistributionFunction().fit_transform(data)
-    assert True
 
 
 def test_ofm(data):
     OrbitalFieldMatrix().fit_transform(data)
-    assert True
 
 
 def test_structure(data):
     Structures().fit_transform(data)
-    assert True
 
 
 if __name__ == "__main__":

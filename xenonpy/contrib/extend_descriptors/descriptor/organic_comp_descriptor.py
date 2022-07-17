@@ -33,7 +33,7 @@ class OrganicCompDescriptor(BaseFeaturizer):
             for z in x:
                 x_mol.append(Chem.MolFromSmiles(z))
                 if x_mol[-1] is None:
-                    raise ValueError('can not convert Mol from SMILES %s' % z)
+                    raise ValueError(f'can not convert Mol from SMILES {z}')
         else:
             x_mol = x
 

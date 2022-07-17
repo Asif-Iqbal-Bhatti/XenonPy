@@ -83,7 +83,7 @@ def test_dataset_1(test_data):
 
     ds = Dataset(str(path), backend='pickle', prefix=('datatools',))
     assert hasattr(ds, 'datatools_test')
-    tmp = '%s' % ds
+    tmp = f'{ds}'
     assert 'Dataset' in tmp
 
 

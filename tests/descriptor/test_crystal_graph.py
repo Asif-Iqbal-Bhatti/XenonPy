@@ -32,9 +32,7 @@ def data():
     warnings.filterwarnings("ignore", message="numpy.dtype size changed")
     warnings.filterwarnings("ignore", message="numpy.ndarray size changed")
 
-    cifs = pd.Series([cif1, cif2], name='structure')
-    yield cifs
-
+    yield pd.Series([cif1, cif2], name='structure')
     print('test over')
 
 

@@ -69,8 +69,9 @@ class PowerTransformer(BaseEstimator, TransformerMixin):
             x = x.values
         if not isinstance(x, np.ndarray):
             raise TypeError(
-                'parameter `X` should be a `DataFrame`, `Series`, `ndarray` or list object '
-                'but got {}'.format(type(x)))
+                f'parameter `X` should be a `DataFrame`, `Series`, `ndarray` or list object but got {type(x)}'
+            )
+
         if len(x.shape) == 1:
             x = x.reshape(-1, 1)
         return x
@@ -91,23 +92,20 @@ class PowerTransformer(BaseEstimator, TransformerMixin):
         x = self._pt._check_input(self._check_type(x), in_fit=True)
 
         # forcing constant column vectors to have no transformation (lambda=1)
-        idx = []
-        for i, col in enumerate(x.T):
-            if np.all(col == col[0]):
-                idx.append(i)
-
-        if self._lmd is not None:
-            if isinstance(self._lmd, float):
-                self._pt.lambdas_ = np.array([self._lmd] * x.shape[1])
-            elif x.shape[1] != len(self._lmd):
-                raise ValueError('shape[1] of parameter `X` should be {} but got {}'.format(
-                    x.shape[1], len(self._lmd)))
-            else:
-                self._pt.lambdas_ = np.array(self._lmd)
-        else:
+        idx = [i for i, col in enumerate(x.T) if np.all(col == col[0])]
+        if self._lmd is None:
             self._pt.fit(x)
 
-        if len(idx) > 0:
+        elif isinstance(self._lmd, float):
+            self._pt.lambdas_ = np.array([self._lmd] * x.shape[1])
+        elif x.shape[1] != len(self._lmd):
+            raise ValueError(
+                f'shape[1] of parameter `X` should be {x.shape[1]} but got {len(self._lmd)}'
+            )
+
+        else:
+            self._pt.lambdas_ = np.array(self._lmd)
+        if idx:
             self._pt.lambdas_[idx] = 1.
 
         return self

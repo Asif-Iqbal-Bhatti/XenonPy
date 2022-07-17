@@ -317,7 +317,6 @@ class GetModelDetails(BaseQuery):
                 }}
             }}
             '''
-        pass
 
 
 class GetModelDetail(BaseQuery):
@@ -394,7 +393,6 @@ class GetModelDetail(BaseQuery):
                 }}
             }}
             '''
-        pass
 
 
 class GetTrainingInfo(BaseQuery):

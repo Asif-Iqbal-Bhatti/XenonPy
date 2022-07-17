@@ -35,11 +35,7 @@ class GaussianLogLikelihood(BaseLogLikelihood):
         targets: dictionary
             Upper and lower bounds for each property to calculate the Gaussian CDF probability
         """
-        if estimators:
-            self._mdl = deepcopy(estimators)
-        else:
-            self._mdl = {}
-
+        self._mdl = deepcopy(estimators) if estimators else {}
         if not isinstance(descriptor, (BaseFeaturizer, BaseDescriptor)):
             raise TypeError('<descriptor> must be a subclass of <BaseFeaturizer> or <BaseDescriptor>')
         self.descriptor = descriptor
